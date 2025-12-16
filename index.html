@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Obsera Solutions - Universal Menu</title>
+    <title>Obsera Solutions - Dynamic Menu</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
 
- <style>
-        /* Existing styles... */
+    <style>
+        /* Hide scrollbar on TV only */
         @media (min-width: 1024px) {
             body::-webkit-scrollbar { display: none; }
             body { -ms-overflow-style: none; scrollbar-width: none; }
@@ -20,40 +20,40 @@
         .fade-in { animation: fadeIn 0.5s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- NEW SMOOTH SCROLL ANIMATION --- */
+        /* Smooth Scrolling Text */
         .smooth-scroll {
             display: inline-block;
             white-space: nowrap;
-            will-change: transform; /* Forces the device GPU to render this */
-            animation: scroll-left 25s linear infinite; /* 25s = Speed (Lower is faster) */
+            will-change: transform;
+            animation: scroll-left 25s linear infinite;
         }
-        
         @keyframes scroll-left {
-            from { transform: translateX(100vw); } /* Start completely off-screen right */
-            to { transform: translateX(-100%); }   /* End completely off-screen left */
+            from { transform: translateX(100vw); }
+            to { transform: translateX(-100%); } 
         }
     </style>
 </head>
 
 <body class="bg-gray-900 text-white min-h-screen flex flex-col lg:h-screen lg:overflow-hidden font-body">
 
-    <header class="bg-red-700 p-4 lg:p-6 flex flex-col lg:flex-row justify-between items-center shadow-lg z-10 sticky top-0 w-full">
+    <header class="bg-red-700 p-4 lg:p-6 flex flex-col lg:flex-row justify-between items-center shadow-lg z-10 sticky top-0 w-full transition-colors duration-500" id="main-header">
         <div class="text-center lg:text-left mb-2 lg:mb-0">
             <h1 class="text-2xl lg:text-4xl font-heading font-bold uppercase tracking-wider">Spicy Kerala Bistro</h1>
             <p class="text-red-200 text-xs lg:text-lg">Powered by Obsera Solutions</p>
         </div>
         <div class="text-center lg:text-right flex flex-row lg:flex-col items-center gap-4 lg:gap-0">
-            <h2 id="menu-title" class="text-3xl lg:text-5xl font-heading font-bold text-white">LOADING...</h2>
+            <h2 id="menu-title" class="text-3xl lg:text-5xl font-heading font-bold text-white uppercase">LOADING...</h2>
             <div id="clock" class="text-lg lg:text-xl text-red-100 mt-1 font-mono">00:00</div>
         </div>
     </header>
 
-   <main class="flex-grow px-4 lg:px-8 pt-2 pb-40 w-full">
+    <main class="flex-grow px-4 lg:px-8 pt-2 pb-40 w-full">
         <div id="menu-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 h-full content-start lg:content-center">
             <p class="text-white text-xl text-center w-full col-span-1 lg:col-span-3">Loading Menu...</p>
         </div>
     </main>
-<footer class="fixed bottom-0 left-0 w-full bg-black z-[9999] py-1 border-t-2 border-red-700 shadow-[0_-4px_10px_rgba(0,0,0,0.5)] overflow-hidden">
+
+    <footer class="fixed bottom-0 left-0 w-full bg-black z-[9999] py-1 border-t-2 border-red-700 shadow-[0_-4px_10px_rgba(0,0,0,0.5)] overflow-hidden">
         <div class="smooth-scroll text-sm lg:text-base text-yellow-400 font-bold leading-none block">
             ★ TODAY'S SPECIAL: 20% OFF ON FAMILY PACKS ★ CONTACT OBSERA SOLUTIONS FOR ADVERTISING HERE
         </div>
@@ -61,31 +61,23 @@
 
 <script>
     // --- CONFIGURATION ---
-    // Your Sheet ID
     const SHEET_ID = '1s9NCrlKf3i4lt4VL3WKp8A9o9DXYrsE3ccddPVkMyk8'; 
-    
-    // Instant Update URL
     const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=0`;
 
-    // TV Settings
     const ITEMS_PER_SLIDE = 6;      
     const SLIDE_DURATION = 8000;    
     const CHECK_INTERVAL = 10000;   
 
-    let allItems = [];              
+    // "slideDeck" will hold pages. Each page has { title: "Dinner", items: [...] }
+    let slideDeck = [];              
     let currentSlideIndex = 0;      
-    let totalSlides = 1;            
     let slideTimer = null;          
     let isDataChanged = false;      
-    let pendingData = null;
+    let pendingDeck = null;
     
-    // DETECT MOBILE
-    function isMobile() {
-        return window.innerWidth < 1024;
-    }
+    function isMobile() { return window.innerWidth < 1024; }
 
     function fetchMenuData() {
-        // Add timestamp to url to force fresh data
         const uniqueUrl = SHEET_URL + '&t=' + Date.now();
         fetch(uniqueUrl, { cache: "no-store" })
             .then(r => r.ok ? r.text() : null)
@@ -101,52 +93,65 @@
     }
 
     function processData(rows) {
-        let menuData = { breakfast: [], lunch: [], dinner: [] };
+        // 1. Group items by Category
+        let groupedData = {};
         
         rows.forEach(row => {
             let safeRow = {};
             Object.keys(row).forEach(k => safeRow[k.toLowerCase().trim()] = row[k]);
 
-            if(safeRow.category && safeRow.name) {
-                let cat = safeRow.category.toLowerCase().trim();
-                // Basic cleanup for typo in sheet if needed
-                if(cat === 'cb') cat = 'breakfast'; 
+            if(safeRow.name) { // Only need a name to show it
+                // If category is empty, call it "OUR MENU"
+                let cat = safeRow.category ? safeRow.category.trim().toUpperCase() : "OUR MENU";
+                if(cat === "") cat = "OUR MENU";
+
+                if (!groupedData[cat]) groupedData[cat] = [];
                 
-                if (menuData[cat]) {
-                    menuData[cat].push({
-                        name: safeRow.name,
-                        price: safeRow.price,
-                        desc: safeRow.desc || safeRow.description || "",
-                        image: safeRow.image
-                    });
-                }
+                groupedData[cat].push({
+                    name: safeRow.name,
+                    price: safeRow.price,
+                    desc: safeRow.desc || safeRow.description || "",
+                    image: safeRow.image
+                });
             }
         });
 
-        const hour = new Date().getHours(); 
-        let period = 'dinner';
-        if (hour >= 5 && hour < 12) period = 'breakfast';
-        if (hour >= 12 && hour < 17) period = 'lunch';
+        // 2. Build the "Deck" of slides (Chunks of 6)
+        let newDeck = [];
         
-        document.getElementById('menu-title').innerText = period.toUpperCase();
+        // Get all categories found in the sheet
+        Object.keys(groupedData).forEach(categoryName => {
+            const items = groupedData[categoryName];
+            
+            // Calculate how many slides we need for this category
+            const totalPages = Math.ceil(items.length / ITEMS_PER_SLIDE);
+            
+            for(let i=0; i < totalPages; i++) {
+                const start = i * ITEMS_PER_SLIDE;
+                const end = start + ITEMS_PER_SLIDE;
+                newDeck.push({
+                    title: categoryName, // This will be the Header Text
+                    items: items.slice(start, end)
+                });
+            }
+        });
 
-        const newData = menuData[period];
-        
-        // Data Update Logic
-        if (allItems.length === 0) {
-            allItems = newData || [];
-            if(isMobile()) {
-                renderMobileView();
+        // 3. Update Logic
+        if (slideDeck.length === 0) {
+            slideDeck = newDeck;
+            if (slideDeck.length === 0) {
+                 document.getElementById('menu-container').innerHTML = '<p class="text-white text-2xl col-span-3 text-center">Sheet is empty.</p>';
             } else {
-                initSlideshow();
+                 if(isMobile()) renderMobileView();
+                 else initSlideshow();
             }
         } else {
-            if (JSON.stringify(allItems) !== JSON.stringify(newData)) {
-                pendingData = newData;
+            // Check if data actually changed
+            if (JSON.stringify(slideDeck) !== JSON.stringify(newDeck)) {
+                pendingDeck = newDeck;
                 isDataChanged = true;
-                
                 if(isMobile()) {
-                    allItems = pendingData;
+                    slideDeck = pendingDeck;
                     renderMobileView();
                     isDataChanged = false;
                 }
@@ -154,41 +159,45 @@
         }
     }
 
-    // --- MOBILE VIEW (Scroll List) ---
+    // --- MOBILE VIEW (Show Everything, Grouped by Header) ---
     function renderMobileView() {
         const container = document.getElementById('menu-container');
+        const titleElement = document.getElementById('menu-title');
+        
         container.innerHTML = '';
+        titleElement.innerText = "FULL MENU"; // Generic title for mobile scrolling
 
-        if (allItems.length === 0) {
-            container.innerHTML = '<p class="text-center col-span-1 lg:col-span-3 text-gray-400 text-xl">No items available.</p>';
-            return;
-        }
+        if (slideDeck.length === 0) return;
 
-        allItems.forEach(item => {
-            const fallbackImage = 'https://placehold.co/600x400/333/FFF?text=No+Image';
-            container.innerHTML += `
-                <div class="flex bg-gray-800 rounded-xl overflow-hidden border border-gray-700 shadow-md h-32 fade-in">
-                    <div class="w-1/3 bg-gray-700 relative">
-                        <img src="${item.image}" class="h-full w-full object-cover absolute inset-0" onerror="this.src='${fallbackImage}'">
-                    </div>
-                    <div class="w-2/3 p-3 flex flex-col justify-center">
-                        <div class="flex justify-between items-start mb-1">
-                            <h3 class="text-lg font-bold text-yellow-500 font-heading leading-tight line-clamp-2">${item.name}</h3>
-                            <span class="bg-red-600 text-white px-2 py-0.5 rounded text-sm font-bold whitespace-nowrap ml-2">${item.price}</span>
+        // Flatten the deck to show all categories in order
+        slideDeck.forEach(page => {
+            // Add a mini-header for the category if it's the start of a group
+            // (Optional logic, but for now we just list items)
+            
+            page.items.forEach(item => {
+                const fallbackImage = 'https://placehold.co/600x400/333/FFF?text=No+Image';
+                container.innerHTML += `
+                    <div class="flex bg-gray-800 rounded-xl overflow-hidden border border-gray-700 shadow-md h-32 fade-in relative">
+                        <span class="absolute top-0 left-0 bg-red-600 text-white text-[10px] font-bold px-2 py-1 z-10 rounded-br-lg">${page.title}</span>
+                        <div class="w-1/3 bg-gray-700 relative">
+                            <img src="${item.image}" class="h-full w-full object-cover absolute inset-0" onerror="this.src='${fallbackImage}'">
                         </div>
-                        <p class="text-gray-300 text-xs leading-snug line-clamp-2">${item.desc}</p>
-                    </div>
-                </div>`;
+                        <div class="w-2/3 p-3 flex flex-col justify-center">
+                            <div class="flex justify-between items-start mb-1">
+                                <h3 class="text-lg font-bold text-yellow-500 font-heading leading-tight line-clamp-2">${item.name}</h3>
+                                <span class="bg-gray-900 border border-gray-600 text-white px-2 py-0.5 rounded text-sm font-bold whitespace-nowrap ml-2">${item.price}</span>
+                            </div>
+                            <p class="text-gray-300 text-xs leading-snug line-clamp-2">${item.desc}</p>
+                        </div>
+                    </div>`;
+            });
         });
     }
 
-    // --- TV VIEW (Slideshow) ---
+    // --- TV VIEW (Slideshow with Dynamic Header) ---
     function initSlideshow() {
         if(isMobile()) return;
 
-        totalSlides = Math.ceil(allItems.length / ITEMS_PER_SLIDE);
-        if (totalSlides < 1) totalSlides = 1;
-        
         currentSlideIndex = 0;
         showSlide(0); 
 
@@ -198,11 +207,13 @@
 
     function nextSlide() {
         currentSlideIndex++;
-        if (currentSlideIndex >= totalSlides) {
-            if (isDataChanged && pendingData) {
-                allItems = pendingData; 
+
+        // End of loop? Check for updates.
+        if (currentSlideIndex >= slideDeck.length) {
+            if (isDataChanged && pendingDeck) {
+                slideDeck = pendingDeck; 
                 isDataChanged = false;
-                pendingData = null;
+                pendingDeck = null;
                 initSlideshow(); 
                 return;
             }
@@ -212,17 +223,17 @@
     }
 
     function showSlide(index) {
+        if(!slideDeck[index]) return;
+
         const container = document.getElementById('menu-container');
-        const start = index * ITEMS_PER_SLIDE;
-        const end = start + ITEMS_PER_SLIDE;
-        const pageItems = allItems.slice(start, end);
+        const titleElement = document.getElementById('menu-title');
+        
+        // 1. UPDATE THE HEADER TITLE
+        titleElement.innerText = slideDeck[index].title;
 
+        // 2. RENDER ITEMS
+        const pageItems = slideDeck[index].items;
         container.innerHTML = ''; 
-
-        if (pageItems.length === 0) {
-             container.innerHTML = '<p class="text-center col-span-3 text-gray-400 text-2xl">No items available for this time.</p>';
-             return;
-        }
 
         pageItems.forEach(item => {
             const fallbackImage = 'https://placehold.co/600x400/333/FFF?text=No+Image';
@@ -243,7 +254,7 @@
     }
 
     function updateClock() {
-        document.getElementById('clock').innerText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' ,second: "2-digit"});
+        document.getElementById('clock').innerText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
     window.addEventListener('resize', () => {

@@ -254,7 +254,7 @@
     }
 
     function updateClock() {
-        document.getElementById('clock').innerText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        document.getElementById('clock').innerText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' ,second: "2-digit"});
     }
 
     window.addEventListener('resize', () => {
@@ -273,3 +273,4 @@
 </script>
 </body>
 </html>
+

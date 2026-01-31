@@ -7,14 +7,14 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
     
-    <title>Obsera Menu v2.5 (Mobile Ready)</title>
+    <title>Obsera Menu v2.6</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
 
     <style>
-        /* TV: Hide scrollbar. Mobile: Show scrollbar (for touch) */
+        /* TV: Hide scrollbar. Mobile: Show scrollbar */
         @media (min-width: 600px) {
             body::-webkit-scrollbar { display: none; }
             body { -ms-overflow-style: none; scrollbar-width: none; }
@@ -55,12 +55,11 @@
         <div class="text-center lg:text-right order-2 lg:order-3">
             <div id="clock" class="text-lg lg:text-2xl font-mono font-bold text-white bg-blue-900/50 px-3 py-1 rounded inline-block whitespace-nowrap">00:00</div>
         </div>
-
     </header>
 
     <main class="flex-grow px-4 lg:px-8 py-4 w-full lg:h-[79vh] lg:overflow-hidden">
         <div id="menu-container" class="w-full h-full">
-            <p class="text-white text-xl text-center w-full mt-20">Loading Menu v2.5...</p>
+            <p class="text-white text-xl text-center w-full mt-20">Loading Menu v2.6...</p>
         </div>
     </main>
 
@@ -89,11 +88,9 @@
     let currentSlideIndex = 0;      
     let slideTimer = null;          
     
-    // Detect Mobile (Phones < 600px width)
     function isMobile() { return window.innerWidth < 600; }
 
     function fetchMenuData() {
-        // "Cache Buster" in URL
         const uniqueUrl = SHEET_URL + '&t=' + Date.now() + Math.random();
         fetch(uniqueUrl, { cache: "no-store" })
             .then(r => r.ok ? r.text() : null)
@@ -157,14 +154,14 @@
         }
     }
 
-    // --- MOBILE VIEW (Scrolling List) ---
+    // --- MOBILE VIEW FIX ---
     function renderMobileView() {
         if(slideTimer) clearInterval(slideTimer);
         const container = document.getElementById('menu-container');
         const titleElement = document.getElementById('menu-title');
         
-        // Use Flex Column + Padding for Mobile Scrolling
-        container.className = "flex flex-col gap-4 pb-20"; 
+        // Added 'w-full' to container
+        container.className = "flex flex-col gap-4 pb-20 w-full"; 
         container.innerHTML = '';
         titleElement.innerText = "FULL MENU"; 
 
@@ -173,9 +170,11 @@
         slideDeck.forEach(page => {
             page.items.forEach(item => {
                 const fallbackImage = 'https://placehold.co/600x400/333/FFF?text=No+Image';
+                
+                // Added 'w-full' to the CARD itself so it fills the width
                 container.innerHTML += `
-                    <div class="flex bg-gray-800 rounded-xl overflow-hidden border border-gray-700 shadow-md min-h-[100px] fade-in relative">
-                        <span class="absolute top-0 left-0 bg-red-600 text-white text-[10px] font-bold px-2 py-1 z-10 rounded-br-lg">${page.title}</span>
+                    <div class="flex bg-gray-800 rounded-xl overflow-hidden border border-gray-700 shadow-md min-h-[100px] fade-in relative w-full">
+                        <span class="absolute top-0 left-0 bg-blue-600 text-white text-[10px] font-bold px-2 py-1 z-10 rounded-br-lg">${page.title}</span>
                         <div class="w-1/3 bg-gray-700 relative">
                             <img src="${item.image}" class="h-full w-full object-cover absolute inset-0" onerror="this.src='${fallbackImage}'">
                         </div>
@@ -191,10 +190,9 @@
         });
     }
 
-    // --- TV VIEW (Grid Slideshow) ---
+    // --- TV VIEW ---
     function initSlideshow() {
         const container = document.getElementById('menu-container');
-        // Force 2 cols x 2 rows
         container.className = "grid grid-cols-2 grid-rows-2 gap-6 h-full w-full";
 
         currentSlideIndex = 0;
@@ -206,9 +204,6 @@
 
     function nextSlide() {
         currentSlideIndex++;
-        
-        // --- HARD REFRESH LOGIC ---
-        // Reloads the page when the last slide finishes
         if (currentSlideIndex >= slideDeck.length) {
             if (navigator.onLine) {
                 console.log("Loop finished. Refreshing page...");
@@ -234,8 +229,6 @@
 
         pageItems.forEach(item => {
             const fallbackImage = 'https://placehold.co/600x400/333/FFF?text=No+Image';
-            
-            // h-full forces card to fill the grid cell
             container.innerHTML += `
                 <div class="flex bg-gray-800 rounded-xl overflow-hidden border border-gray-700 shadow-xl fade-in h-full w-full">
                     <div class="w-5/12 bg-gray-700 relative">
@@ -244,7 +237,7 @@
                     <div class="w-7/12 p-5 flex flex-col justify-center">
                         <div class="flex justify-between items-start mb-2">
                             <h3 class="text-2xl font-bold text-yellow-500 font-heading leading-tight line-clamp-2">${item.name}</h3>
-                            <span class="bg-red-600 text-white px-3 py-1 rounded-lg text-xl font-bold whitespace-nowrap ml-2 shadow-sm">${item.price}</span>
+                            <span class="bg-blue-600 text-white px-3 py-1 rounded-lg text-xl font-bold whitespace-nowrap ml-2 shadow-sm">${item.price}</span>
                         </div>
                         <p class="text-gray-300 text-lg leading-snug line-clamp-4">${item.desc}</p>
                     </div>
@@ -261,7 +254,6 @@
     fetchMenuData(); 
     setInterval(updateClock, 1000); 
 
-    // Safety: Force view check after 3 seconds
     setTimeout(() => {
         if(!isMobile() && !slideTimer) {
             startCorrectView();

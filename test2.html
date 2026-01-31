@@ -7,7 +7,7 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
     
-    <title>Obsera Menu v2.6</title>
+    <title>Obsera Menu v2.7</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
@@ -15,7 +15,7 @@
 
     <style>
         /* TV: Hide scrollbar. Mobile: Show scrollbar */
-        @media (min-width: 600px) {
+        @media (min-width: 1024px) {
             body::-webkit-scrollbar { display: none; }
             body { -ms-overflow-style: none; scrollbar-width: none; }
         }
@@ -41,7 +41,7 @@
 
 <body class="bg-gray-900 text-white min-h-screen flex flex-col lg:h-screen lg:overflow-hidden font-body">
 
-    <header class="bg-blue-800 px-4 py-2 shadow-lg z-50 sticky top-0 w-full flex flex-col gap-2 lg:grid lg:grid-cols-3 lg:gap-0 lg:h-[15vh] lg:items-center border-b-4 border-yellow-500" id="main-header">
+    <header class="bg-blue-800 px-4 py-3 shadow-lg z-50 sticky top-0 w-full flex flex-col gap-2 lg:grid lg:grid-cols-3 lg:gap-0 lg:h-[15vh] lg:items-center border-b-4 border-yellow-500" id="main-header">
         
         <div class="text-center lg:text-left">
             <h1 class="text-3xl lg:text-4xl font-heading font-bold uppercase tracking-wider leading-tight">bilal thattukada</h1>
@@ -59,18 +59,18 @@
 
     <main class="flex-grow px-4 lg:px-8 py-4 w-full lg:h-[79vh] lg:overflow-hidden">
         <div id="menu-container" class="w-full h-full">
-            <p class="text-white text-xl text-center w-full mt-20">Loading Menu v2.6...</p>
+            <p class="text-white text-xl text-center w-full mt-20">Loading Menu v2.7...</p>
         </div>
     </main>
 
     <footer class="fixed bottom-0 left-0 w-full bg-black z-[9999] border-t-2 border-red-700 h-[6vh] flex items-center relative">
-        <div class="smooth-scroll text-sm lg:text-lg text-yellow-400 font-bold leading-none block w-full pr-25">
+        <div class="smooth-scroll text-sm lg:text-lg text-yellow-400 font-bold leading-none block w-full pr-32">
             ★ TODAY'S SPECIAL: 20% OFF ON FAMILY PACKS ★ CONTACT OBSERA SOLUTIONS
         </div>
         
-        <div class="absolute right-2 bottom-1 bg-gray-900/80 px-2 py-1 rounded border border-gray-700">
+        <div class="absolute right-0 bottom-0 h-full bg-black px-3 flex items-center border-l border-gray-800 z-20">
             <img src="https://raw.githubusercontent.com/Dax4477/live-menu/main/Gemini_Generated_Image_jejmw3jejmw3jejm%20(3).png" 
-                 class="h-9 w-auto object-contain opacity-90" 
+                 class="h-8 lg:h-10 w-auto object-contain" 
                  alt="Obsera Logo">
         </div>
     </footer>
@@ -88,7 +88,7 @@
     let currentSlideIndex = 0;      
     let slideTimer = null;          
     
-    function isMobile() { return window.innerWidth < 600; }
+    function isMobile() { return window.innerWidth < 1024; }
 
     function fetchMenuData() {
         const uniqueUrl = SHEET_URL + '&t=' + Date.now() + Math.random();
@@ -160,8 +160,8 @@
         const container = document.getElementById('menu-container');
         const titleElement = document.getElementById('menu-title');
         
-        // Added 'w-full' to container
-        container.className = "flex flex-col gap-4 pb-20 w-full"; 
+        // ADDED: w-full to container + pb-24 for footer clearance
+        container.className = "flex flex-col gap-4 pb-24 w-full"; 
         container.innerHTML = '';
         titleElement.innerText = "FULL MENU"; 
 
@@ -171,7 +171,7 @@
             page.items.forEach(item => {
                 const fallbackImage = 'https://placehold.co/600x400/333/FFF?text=No+Image';
                 
-                // Added 'w-full' to the CARD itself so it fills the width
+                // ADDED: w-full to the CARD div
                 container.innerHTML += `
                     <div class="flex bg-gray-800 rounded-xl overflow-hidden border border-gray-700 shadow-md min-h-[100px] fade-in relative w-full">
                         <span class="absolute top-0 left-0 bg-blue-600 text-white text-[10px] font-bold px-2 py-1 z-10 rounded-br-lg">${page.title}</span>

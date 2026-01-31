@@ -207,21 +207,28 @@
         slideTimer = setInterval(nextSlide, SLIDE_DURATION);
     }
 
-    function nextSlide() {
+   function nextSlide() {
         currentSlideIndex++;
+
+        // Check if we have reached the end of the slideshow
         if (currentSlideIndex >= slideDeck.length) {
-            if (isDataChanged && pendingDeck) {
-                slideDeck = pendingDeck; 
-                isDataChanged = false;
-                pendingDeck = null;
-                initSlideshow(); 
-                return;
+            
+            console.log("Slideshow finished.");
+
+            // SAFETY CHECK: Only reload if the internet is connected.
+            // If we reload while offline, the screen will turn white/error.
+            if (navigator.onLine) {
+                console.log("Online. Refreshing page to clear memory and update...");
+                window.location.reload(); // <--- This refreshes the page!
+                return; // Stop here
+            } else {
+                console.log("Offline. Looping without refresh to stay safe.");
+                currentSlideIndex = 0; // Just restart the loop without reloading
             }
-            currentSlideIndex = 0;
         }
+        
         showSlide(currentSlideIndex);
     }
-
     function showSlide(index) {
         if(!slideDeck[index]) return;
 

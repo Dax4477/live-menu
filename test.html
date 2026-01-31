@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="refresh" content="60">
     <title>Obsera Solutions - Dynamic Menu</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -37,7 +36,7 @@
 
 <body class="bg-gray-900 text-white min-h-screen flex flex-col lg:h-screen lg:overflow-hidden font-body">
 
-    <header class="bg-red-700 p-4 lg:p-6 flex flex-col lg:flex-row justify-between items-center shadow-lg z-50 sticky top-0 w-full transition-colors duration-500" id="main-header">
+    <header class="bg-red-700 p-4 lg:p-6 flex flex-col lg:flex-row justify-between items-center shadow-lg z-50 sticky top-0 w-full transition-colors duration-500 h-[15vh]" id="main-header">
         <div class="text-center lg:text-left mb-2 lg:mb-0">
             <h1 class="text-2xl lg:text-4xl font-heading font-bold uppercase tracking-wider">bilal thattukada</h1>
             <p class="text-red-200 text-xs lg:text-lg">Powered by Obsera Solutions</p>
@@ -48,14 +47,14 @@
         </div>
     </header>
 
-    <main class="flex-grow px-4 lg:px-8 pt-2 pb-40 w-full">
-        <div id="menu-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 h-full content-start lg:content-center">
-            <p class="text-white text-xl text-center w-full col-span-1 lg:col-span-3">Loading Menu...</p>
+    <main class="flex-grow px-4 lg:px-8 py-4 w-full h-[75vh]">
+        <div id="menu-container" class="grid grid-cols-1 lg:grid-cols-2 lg:grid-rows-2 gap-6 h-full w-full">
+            <p class="text-white text-xl text-center w-full col-span-1 lg:col-span-2">Loading Menu...</p>
         </div>
     </main>
 
-    <footer class="fixed bottom-0 left-0 w-full bg-black z-[9999] py-1 border-t-2 border-red-700 shadow-[0_-4px_10px_rgba(0,0,0,0.5)] overflow-hidden">
-        <div class="smooth-scroll text-sm lg:text-base text-yellow-400 font-bold leading-none block">
+    <footer class="fixed bottom-0 left-0 w-full bg-black z-[9999] py-2 border-t-2 border-red-700 shadow-[0_-4px_10px_rgba(0,0,0,0.5)] h-[6vh] flex items-center">
+        <div class="smooth-scroll text-lg text-yellow-400 font-bold leading-none block w-full">
             ★ TODAY'S SPECIAL: 20% OFF ON FAMILY PACKS ★ CONTACT OBSERA SOLUTIONS FOR ADVERTISING HERE
         </div>
     </footer>
@@ -65,7 +64,8 @@
     const SHEET_ID = '1s9NCrlKf3i4lt4VL3WKp8A9o9DXYrsE3ccddPVkMyk8'; 
     const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=0`;
 
-    const ITEMS_PER_SLIDE = 6;      
+    // CHANGED: Set to 4 items per slide
+    const ITEMS_PER_SLIDE = 4;      
     const SLIDE_DURATION = 8000;    
     const CHECK_INTERVAL = 10000;   
 
@@ -75,9 +75,7 @@
     let isDataChanged = false;      
     let pendingDeck = null;
     
-    // FIX 1: Lower the threshold. Only consider it "Mobile" if it's TINY (phone size).
-    // PiSignage usually runs at 1280 or 1920, but might boot at 800. 
-    // We set this to 600 to be safe.
+    // PiSignage Fix: Lowered threshold to avoid treating Pi startup as mobile
     function isMobile() { return window.innerWidth < 600; }
 
     function fetchMenuData() {
@@ -119,6 +117,10 @@
 
         let newDeck = [];
         
+        // This logic handles the "Split" automatically.
+        // If a category has 6 items, loop runs twice:
+        // i=0: Items 0-4 (Slide 1)
+        // i=1: Items 4-6 (Slide 2)
         Object.keys(groupedData).forEach(categoryName => {
             const items = groupedData[categoryName];
             const totalPages = Math.ceil(items.length / ITEMS_PER_SLIDE);
@@ -136,9 +138,9 @@
         if (slideDeck.length === 0) {
             slideDeck = newDeck;
             if (slideDeck.length === 0) {
-                 document.getElementById('menu-container').innerHTML = '<p class="text-white text-2xl col-span-3 text-center">Sheet is empty.</p>';
+                 document.getElementById('menu-container').innerHTML = '<p class="text-white text-2xl col-span-2 text-center">Sheet is empty.</p>';
             } else {
-                 startCorrectView(); // Use helper function
+                 startCorrectView();
             }
         } else {
             if (JSON.stringify(slideDeck) !== JSON.stringify(newDeck)) {
@@ -153,21 +155,21 @@
         }
     }
 
-    // FIX 2: Helper function to decide view
     function startCorrectView() {
         if(isMobile()) {
             renderMobileView();
         } else {
-            // If the slideshow is already running, don't restart it
             if(!slideTimer) initSlideshow();
         }
     }
 
     function renderMobileView() {
-        if(slideTimer) clearInterval(slideTimer); // Stop slideshow if we switch to mobile
+        if(slideTimer) clearInterval(slideTimer);
         const container = document.getElementById('menu-container');
         const titleElement = document.getElementById('menu-title');
         
+        // Reset grid for mobile scrolling
+        container.className = "flex flex-col gap-4";
         container.innerHTML = '';
         titleElement.innerText = "FULL MENU"; 
 
@@ -177,7 +179,7 @@
             page.items.forEach(item => {
                 const fallbackImage = 'https://placehold.co/600x400/333/FFF?text=No+Image';
                 container.innerHTML += `
-                    <div class="flex bg-gray-800 rounded-xl overflow-hidden border border-gray-700 shadow-md h-32 fade-in relative mb-4">
+                    <div class="flex bg-gray-800 rounded-xl overflow-hidden border border-gray-700 shadow-md min-h-[120px] fade-in relative">
                         <span class="absolute top-0 left-0 bg-red-600 text-white text-[10px] font-bold px-2 py-1 z-10 rounded-br-lg">${page.title}</span>
                         <div class="w-1/3 bg-gray-700 relative">
                             <img src="${item.image}" class="h-full w-full object-cover absolute inset-0" onerror="this.src='${fallbackImage}'">
@@ -195,6 +197,10 @@
     }
 
     function initSlideshow() {
+        // Reset grid for TV mode (2x2)
+        const container = document.getElementById('menu-container');
+        container.className = "grid grid-cols-1 lg:grid-cols-2 lg:grid-rows-2 gap-6 h-full w-full";
+
         currentSlideIndex = 0;
         showSlide(0); 
 
@@ -230,17 +236,19 @@
 
         pageItems.forEach(item => {
             const fallbackImage = 'https://placehold.co/600x400/333/FFF?text=No+Image';
+            
+            // INCREASED HEIGHT: h-full allows the card to stretch to fill the 2x2 grid cell
             container.innerHTML += `
-                <div class="flex bg-gray-800 rounded-xl overflow-hidden border border-gray-700 shadow-xl fade-in h-48">
-                    <div class="w-1/3 bg-gray-700 relative">
+                <div class="flex bg-gray-800 rounded-xl overflow-hidden border border-gray-700 shadow-xl fade-in h-full w-full">
+                    <div class="w-5/12 bg-gray-700 relative">
                         <img src="${item.image}" class="h-full w-full object-cover absolute inset-0" onerror="this.src='${fallbackImage}'">
                     </div>
-                    <div class="w-2/3 p-4 flex flex-col justify-center">
-                        <div class="flex justify-between items-start mb-1">
-                            <h3 class="text-xl font-bold text-yellow-500 font-heading leading-tight line-clamp-2">${item.name}</h3>
-                            <span class="bg-red-600 text-white px-2 py-1 rounded text-lg font-bold whitespace-nowrap ml-2">${item.price}</span>
+                    <div class="w-7/12 p-5 flex flex-col justify-center">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-2xl font-bold text-yellow-500 font-heading leading-tight line-clamp-2">${item.name}</h3>
+                            <span class="bg-red-600 text-white px-3 py-1 rounded-lg text-xl font-bold whitespace-nowrap ml-2 shadow-sm">${item.price}</span>
                         </div>
-                        <p class="text-gray-300 text-sm leading-snug line-clamp-3">${item.desc}</p>
+                        <p class="text-gray-300 text-lg leading-snug line-clamp-4">${item.desc}</p>
                     </div>
                 </div>`;
         });
@@ -250,17 +258,12 @@
         document.getElementById('clock').innerText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' ,second: "2-digit"});
     }
 
-    window.addEventListener('resize', () => {
-        // FIX 3: Re-evaluate view on resize
-        startCorrectView();
-    });
+    window.addEventListener('resize', () => { startCorrectView(); });
 
     fetchMenuData(); 
     setInterval(updateClock, 1000); 
     setInterval(fetchMenuData, CHECK_INTERVAL); 
 
-    // FIX 4: Safety Check - Force TV mode check 3 seconds after load
-    // This fixes the issue where the Pi starts with a small window and then expands.
     setTimeout(() => {
         if(!isMobile() && !slideTimer) {
             console.log("Forcing Slideshow Mode...");
@@ -271,5 +274,3 @@
 </script>
 </body>
 </html>
-
-

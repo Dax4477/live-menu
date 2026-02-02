@@ -85,7 +85,6 @@
     let currentSlideIndex = 0;      
     let slideTimer = null;          
     
-    // Mobile Detection (Increased to 1024 to catch iPads/Small Laptops)
     function isMobile() { return window.innerWidth < 1024; }
 
     function fetchMenuData() {
@@ -106,24 +105,24 @@
     function processData(rows) {
         let groupedData = {};
         
-        // Default Ticker Message
+        // 1. Default Message if nothing is in sheet
         let tickerMessage = "★ WELCOME TO BILAL THATTUKADA ★ CONTACT OBSERA SOLUTIONS";
 
         rows.forEach(row => {
             let safeRow = {};
             Object.keys(row).forEach(k => safeRow[k.toLowerCase().trim()] = row[k]);
 
-            // --- TICKER LOGIC (Reads from Sheet) ---
+            // --- 2. CHECK FOR TICKER ROW ---
             let cat = safeRow.category ? safeRow.category.trim().toUpperCase() : "";
             
             if (cat === "TICKER" || cat === "SCROLL") {
                 if (safeRow.name) {
-                    tickerMessage = safeRow.name; 
+                    tickerMessage = safeRow.name; // Use this text
                 }
-                return; // Stop here, don't create a card
+                return; // Skip this row, do not show it as a food item
             }
 
-            // --- MENU CARD LOGIC ---
+            // --- 3. NORMAL MENU ITEMS ---
             if(safeRow.name) { 
                 if(cat === "") cat = "OUR MENU";
                 if (!groupedData[cat]) groupedData[cat] = [];
@@ -136,7 +135,7 @@
             }
         });
 
-        // UPDATE THE TICKER ON SCREEN
+        // 4. Update the Footer Text
         const tickerElement = document.getElementById('ticker-text');
         if (tickerElement) tickerElement.innerText = tickerMessage;
 

@@ -106,81 +106,75 @@
             .catch(e => console.error("Error:", e));
     }
 
-    function processData(rows) {
+function processData(rows) {
+        console.log("Raw Data:", rows); // Check Console (F12) to see if data arrives
+
         let groupedData = {};
-        
-        // Default Message
         let tickerMessage = "★ FOR ADVERTISING THIS SCREEN ★ CONTACT OBSERA SOLUTIONS";
 
-        rows.forEach(row => {
+        rows.forEach((row, index) => {
+            // 1. Sanitize Keys (Headers)
             let safeRow = {};
-            Object.keys(row).forEach(k => safeRow[k.toLowerCase().trim()] = row[k]);
+            Object.keys(row).forEach(key => {
+                safeRow[key.trim().toLowerCase()] = row[key];
+            });
 
-            // --- NEW LOGIC: Check if 'NAME' column says 'TICKER' ---
-            if (safeRow.name && safeRow.name.toUpperCase() === "TICKER") {
-                // Use the Description column as the message
-                let msg = safeRow.desc || safeRow.description || "";
-                if (msg.length > 0) {
-                    tickerMessage = msg;
-                    console.log("Found Ticker Row:", tickerMessage);
+            // 2. Find Columns (Safe Search)
+            let name = safeRow.name || safeRow.item || safeRow.title;
+            
+            // FIX: Force Price to be a String to prevent crashes
+            let rawPrice = safeRow.price || safeRow.cost || safeRow.amount;
+            let price = rawPrice ? String(rawPrice).trim() : ""; 
+
+            let desc = safeRow.desc || safeRow.description || "";
+            let image = safeRow.image || safeRow.img || "";
+            let cat = safeRow.category || "OUR MENU";
+
+            // 3. Skip Invalid Rows
+            if (!name) return; 
+
+            // 4. Ticker Logic
+            if (name.toUpperCase() === "TICKER") {
+                if (desc) {
+                    tickerMessage = desc;
+                    const tickerEl = document.getElementById('ticker-text');
+                    if(tickerEl) tickerEl.innerText = tickerMessage;
                 }
-                return; // Stop processing this row (don't add to menu)
+                return;
             }
 
-            // Normal Menu Logic
-            let cat = safeRow.category ? safeRow.category.trim().toUpperCase() : "OUR MENU";
-            if(safeRow.name) { 
-                if(cat === "") cat = "OUR MENU";
-                if (!groupedData[cat]) groupedData[cat] = [];
-                groupedData[cat].push({
-                    name: safeRow.name,
-                    price: safeRow.price,
-                    desc: safeRow.desc || safeRow.description || "",
-                    image: safeRow.image
-                });
-            }
+            // 5. Add to Menu
+            let catName = cat.trim().toUpperCase();
+            if (!groupedData[catName]) groupedData[catName] = [];
+            
+            groupedData[catName].push({
+                name: name,
+                price: price, // Now safely a string
+                desc: desc,
+                image: image
+            });
         });
 
-        // FORCE UPDATE FOOTER
-        const tickerElement = document.getElementById('ticker-text');
-        if (tickerElement) {
-             tickerElement.innerText = tickerMessage;
-        }
-
+        // 6. Build Slides
         let newDeck = [];
-        Object.keys(groupedData).forEach(categoryName => {
-            const items = groupedData[categoryName];
-            const totalPages = Math.ceil(items.length / ITEMS_PER_SLIDE);
-            for(let i=0; i < totalPages; i++) {
-                const start = i * ITEMS_PER_SLIDE;
-                const end = start + ITEMS_PER_SLIDE;
+        Object.keys(groupedData).forEach(cat => {
+            const items = groupedData[cat];
+            for(let i=0; i < Math.ceil(items.length / ITEMS_PER_SLIDE); i++) {
                 newDeck.push({
-                    title: categoryName, 
-                    items: items.slice(start, end)
+                    title: cat,
+                    items: items.slice(i * ITEMS_PER_SLIDE, (i + 1) * ITEMS_PER_SLIDE)
                 });
             }
         });
 
-        if (slideDeck.length === 0) {
-            slideDeck = newDeck;
-            if (slideDeck.length === 0) {
-                 document.getElementById('menu-container').innerHTML = '<p class="text-white text-2xl text-center">Sheet is empty.</p>';
-            } else {
-                 startCorrectView();
-            }
+        // 7. Render
+        if (newDeck.length === 0) {
+            document.getElementById('menu-container').innerHTML = '<div class="text-white text-center p-10 text-xl">Sheet is empty. <br>Check Row 1 Headers.</div>';
         } else {
-            if (JSON.stringify(slideDeck) !== JSON.stringify(newDeck)) {
-                pendingDeck = newDeck;
-                isDataChanged = true;
-                if(isMobile()) {
-                    slideDeck = pendingDeck;
-                    renderMobileView();
-                    isDataChanged = false;
-                }
-            }
+            slideDeck = newDeck;
+            startCorrectView();
         }
     }
-
     function startCorrectView() {
         if(isMobile()) {
             renderMobileView();
@@ -294,6 +288,7 @@
 </script>
 </body>
 </html>
+
 
 
 

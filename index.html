@@ -7,7 +7,7 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
     
-    <title>Obsera Menu v2.3 (Dynamic Ticker)</title>
+    <title>Obsera Menu v2.3 (Editable Ticker)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
@@ -108,25 +108,28 @@
     function processData(rows) {
         let groupedData = {};
         
-        // Default Ticker Text (Initial)
+        // This is the default text if the sheet is empty or has no TICKER row
         let tickerMessage = "★ TODAY'S SPECIAL: 20% OFF ON FAMILY PACKS ★ CONTACT OBSERA SOLUTIONS";
+        let hasTickerUpdate = false;
 
         rows.forEach(row => {
             let safeRow = {};
             Object.keys(row).forEach(k => safeRow[k.toLowerCase().trim()] = row[k]);
 
-            // --- TICKER LOGIC START ---
+            // --- TICKER LOGIC ---
+            // Finds the row with Category "TICKER"
             let cat = safeRow.category ? safeRow.category.trim().toUpperCase() : "";
             
-            // If row category is TICKER, update the message variable and SKIP creating a card
             if (cat === "TICKER" || cat === "SCROLL") {
                 if (safeRow.name) {
                     tickerMessage = safeRow.name; 
+                    hasTickerUpdate = true;
+                    console.log("New Ticker Found:", tickerMessage);
                 }
-                return; 
+                return; // Do not add this row to the food menu
             }
-            // --- TICKER LOGIC END ---
 
+            // Normal Menu Item Logic
             if(safeRow.name) { 
                 if(cat === "") cat = "OUR MENU";
                 if (!groupedData[cat]) groupedData[cat] = [];
@@ -139,9 +142,16 @@
             }
         });
 
-        // UPDATE THE FOOTER TEXT
+        // FORCE UPDATE THE FOOTER TEXT
         const tickerElement = document.getElementById('ticker-text');
-        if (tickerElement) tickerElement.innerText = tickerMessage;
+        if (tickerElement) {
+            // Only update if the text is actually different to avoid animation glitches
+            if(tickerElement.innerText !== tickerMessage) {
+                tickerElement.innerText = tickerMessage;
+            }
+        } else {
+            console.error("ERROR: Could not find element with id='ticker-text'. Check your HTML footer.");
+        }
 
         let newDeck = [];
         Object.keys(groupedData).forEach(categoryName => {
@@ -157,6 +167,7 @@
             }
         });
 
+        // Update Slides Logic
         if (slideDeck.length === 0) {
             slideDeck = newDeck;
             if (slideDeck.length === 0) {
@@ -219,7 +230,6 @@
 
     function initSlideshow() {
         const container = document.getElementById('menu-container');
-        // Force 2 cols x 2 rows
         container.className = "grid grid-cols-2 grid-rows-2 gap-6 h-full w-full";
 
         currentSlideIndex = 0;
@@ -232,31 +242,24 @@
     function nextSlide() {
         currentSlideIndex++;
 
-        // Check if we have reached the end of the slideshow
         if (currentSlideIndex >= slideDeck.length) {
-            
             console.log("Slideshow finished.");
-
-            // SAFETY CHECK: Only reload if the internet is connected.
-            // If we reload while offline, the screen will turn white/error.
             if (navigator.onLine) {
-                console.log("Online. Refreshing page to clear memory and update...");
-                window.location.reload(); // <--- This refreshes the page!
-                return; // Stop here
+                console.log("Online. Refreshing page...");
+                window.location.reload(); 
+                return; 
             } else {
-                console.log("Offline. Looping without refresh to stay safe.");
-                currentSlideIndex = 0; // Just restart the loop without reloading
+                currentSlideIndex = 0; 
             }
         }
-        
         showSlide(currentSlideIndex);
     }
+
     function showSlide(index) {
         if(!slideDeck[index]) return;
 
         const container = document.getElementById('menu-container');
         const titleElement = document.getElementById('menu-title');
-        
         titleElement.innerText = slideDeck[index].title;
 
         const pageItems = slideDeck[index].items;
@@ -264,8 +267,6 @@
 
         pageItems.forEach(item => {
             const fallbackImage = 'https://placehold.co/600x400/333/FFF?text=No+Image';
-            
-            // h-full forces card to fill the grid cell
             container.innerHTML += `
                 <div class="flex bg-gray-800 rounded-xl overflow-hidden border border-gray-700 shadow-xl fade-in h-full w-full">
                     <div class="w-5/12 bg-gray-700 relative">

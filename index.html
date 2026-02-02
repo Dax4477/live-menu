@@ -7,7 +7,7 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
     
-    <title>Obsera Menu v2.3 (Fixed)</title>
+    <title>Obsera Menu v3.1</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
@@ -58,7 +58,7 @@
 
     <main class="flex-grow px-4 lg:px-8 py-4 w-full h-[79vh] overflow-hidden">
         <div id="menu-container" class="w-full h-full">
-            <p class="text-white text-xl text-center w-full mt-20">Loading Menu v2.3...</p>
+            <p class="text-white text-xl text-center w-full mt-20">Loading Menu v3.1...</p>
         </div>
     </main>
 
@@ -91,9 +91,8 @@
     function isMobile() { return window.innerWidth < 600; }
 
     function fetchMenuData() {
-        // Added extra random number to force Google to give fresh data
+        // Cache Buster to force update
         const uniqueUrl = SHEET_URL + '&t=' + Date.now() + Math.random();
-        
         fetch(uniqueUrl, { cache: "no-store" })
             .then(r => r.ok ? r.text() : null)
             .then(csvText => {
@@ -110,24 +109,29 @@
     function processData(rows) {
         let groupedData = {};
         
-        // This is the default text. It will be replaced if the sheet works.
+        // Default Message
         let tickerMessage = "★ TODAY'S SPECIAL: 20% OFF ON FAMILY PACKS ★ CONTACT OBSERA SOLUTIONS";
-        
+
         rows.forEach(row => {
             let safeRow = {};
             Object.keys(row).forEach(k => safeRow[k.toLowerCase().trim()] = row[k]);
 
-            // --- TICKER LOGIC ---
-            // 1. Look for Category "TICKER"
-            let cat = safeRow.category ? safeRow.category.trim().toUpperCase() : "";
-            
-            if (cat === "TICKER" || cat === "SCROLL") {
-                if (safeRow.name) {
-                    // 2. Found it! Update the variable.
-                    tickerMessage = safeRow.name; 
-                    console.log("Ticker Updated from Sheet:", tickerMessage);
+            // --- NEW LOGIC: Check 'NAME' Column ---
+            if (safeRow.name && safeRow.name.toUpperCase() === "TICKER") {
+                // If Name is TICKER, use Description as the message
+                let msg = safeRow.desc || safeRow.description || "";
+                if (msg.length > 0) {
+                    tickerMessage = msg;
+                    console.log("Found Ticker Row:", tickerMessage);
                 }
-                return; // Stop here. Do not add this row to the food menu.
+                return; // Stop processing this row
+            }
+
+            // --- OLD LOGIC: Check 'CATEGORY' Column (Backup) ---
+            let cat = safeRow.category ? safeRow.category.trim().toUpperCase() : "";
+            if (cat === "TICKER") {
+                if (safeRow.name) tickerMessage = safeRow.name;
+                return;
             }
 
             // Normal Menu Logic
@@ -143,15 +147,10 @@
             }
         });
 
-        // --- UPDATE THE SCREEN ---
-        // This part finds the footer ID and changes the text
+        // FORCE UPDATE FOOTER
         const tickerElement = document.getElementById('ticker-text');
         if (tickerElement) {
-            if(tickerElement.innerText !== tickerMessage) {
-                tickerElement.innerText = tickerMessage;
-            }
-        } else {
-            console.error("ERROR: Cannot find footer ID 'ticker-text'. Please update HTML.");
+             tickerElement.innerText = tickerMessage;
         }
 
         let newDeck = [];
@@ -242,13 +241,11 @@
     function nextSlide() {
         currentSlideIndex++;
         if (currentSlideIndex >= slideDeck.length) {
-            console.log("Slideshow finished.");
             if (navigator.onLine) {
                 console.log("Online. Refreshing page...");
                 window.location.reload(); 
                 return; 
             } else {
-                console.log("Offline. Looping without refresh to stay safe.");
                 currentSlideIndex = 0; 
             }
         }
@@ -294,6 +291,7 @@
 
     setTimeout(() => {
         if(!isMobile() && !slideTimer) {
+            console.log("Forcing Slideshow Mode...");
             startCorrectView();
         }
     }, 3000);

@@ -7,7 +7,7 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
     
-    <title>Obsera Menu v2.3 (Editable Ticker)</title>
+    <title>Obsera Menu v2.3 (Fixed)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
@@ -91,7 +91,9 @@
     function isMobile() { return window.innerWidth < 600; }
 
     function fetchMenuData() {
+        // Added extra random number to force Google to give fresh data
         const uniqueUrl = SHEET_URL + '&t=' + Date.now() + Math.random();
+        
         fetch(uniqueUrl, { cache: "no-store" })
             .then(r => r.ok ? r.text() : null)
             .then(csvText => {
@@ -108,28 +110,27 @@
     function processData(rows) {
         let groupedData = {};
         
-        // This is the default text if the sheet is empty or has no TICKER row
+        // This is the default text. It will be replaced if the sheet works.
         let tickerMessage = "★ TODAY'S SPECIAL: 20% OFF ON FAMILY PACKS ★ CONTACT OBSERA SOLUTIONS";
-        let hasTickerUpdate = false;
-
+        
         rows.forEach(row => {
             let safeRow = {};
             Object.keys(row).forEach(k => safeRow[k.toLowerCase().trim()] = row[k]);
 
             // --- TICKER LOGIC ---
-            // Finds the row with Category "TICKER"
+            // 1. Look for Category "TICKER"
             let cat = safeRow.category ? safeRow.category.trim().toUpperCase() : "";
             
             if (cat === "TICKER" || cat === "SCROLL") {
                 if (safeRow.name) {
+                    // 2. Found it! Update the variable.
                     tickerMessage = safeRow.name; 
-                    hasTickerUpdate = true;
-                    console.log("New Ticker Found:", tickerMessage);
+                    console.log("Ticker Updated from Sheet:", tickerMessage);
                 }
-                return; // Do not add this row to the food menu
+                return; // Stop here. Do not add this row to the food menu.
             }
 
-            // Normal Menu Item Logic
+            // Normal Menu Logic
             if(safeRow.name) { 
                 if(cat === "") cat = "OUR MENU";
                 if (!groupedData[cat]) groupedData[cat] = [];
@@ -142,15 +143,15 @@
             }
         });
 
-        // FORCE UPDATE THE FOOTER TEXT
+        // --- UPDATE THE SCREEN ---
+        // This part finds the footer ID and changes the text
         const tickerElement = document.getElementById('ticker-text');
         if (tickerElement) {
-            // Only update if the text is actually different to avoid animation glitches
             if(tickerElement.innerText !== tickerMessage) {
                 tickerElement.innerText = tickerMessage;
             }
         } else {
-            console.error("ERROR: Could not find element with id='ticker-text'. Check your HTML footer.");
+            console.error("ERROR: Cannot find footer ID 'ticker-text'. Please update HTML.");
         }
 
         let newDeck = [];
@@ -167,7 +168,6 @@
             }
         });
 
-        // Update Slides Logic
         if (slideDeck.length === 0) {
             slideDeck = newDeck;
             if (slideDeck.length === 0) {
@@ -241,7 +241,6 @@
 
     function nextSlide() {
         currentSlideIndex++;
-
         if (currentSlideIndex >= slideDeck.length) {
             console.log("Slideshow finished.");
             if (navigator.onLine) {
@@ -249,12 +248,12 @@
                 window.location.reload(); 
                 return; 
             } else {
+                console.log("Offline. Looping without refresh to stay safe.");
                 currentSlideIndex = 0; 
             }
         }
         showSlide(currentSlideIndex);
     }
-
     function showSlide(index) {
         if(!slideDeck[index]) return;
 
@@ -295,7 +294,6 @@
 
     setTimeout(() => {
         if(!isMobile() && !slideTimer) {
-            console.log("Forcing Slideshow Mode...");
             startCorrectView();
         }
     }, 3000);

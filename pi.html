@@ -7,7 +7,7 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" /> 
     
-    <title>Obsera Menu v5.1 (Full Screen Ads)</title>
+    <title>Obsera Menu v6.0 (Video & Image Ads)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
@@ -60,7 +60,7 @@
 
     <main class="flex-grow px-4 lg:px-8 py-4 w-full h-[76vh] overflow-hidden relative">
         <div id="menu-container" class="w-full h-full uppercase relative">
-            <p class="text-white text-xl text-center w-full mt-20 uppercase">Loading Menu v5.1...</p>
+            <p class="text-white text-xl text-center w-full mt-20 uppercase">Loading Menu v6.0...</p>
         </div>
     </main>
 
@@ -125,16 +125,20 @@
 
             let cat = safeRow.category ? safeRow.category.trim().toUpperCase() : "OUR MENU";
             
-            // Ad Logic
+            // --- Ad Logic ---
             if (cat === "ADVERTISEMENT") {
                 if (safeRow.image) {
+                    // Check if the URL looks like a video
+                    const isVideo = safeRow.image.match(/\.(mp4|webm|ogg)$/i);
+                    
                     adList.push({
+                        type: isVideo ? 'video' : 'image', // Mark as video or image
                         image: safeRow.image,
                         duration: safeRow.price ? parseInt(safeRow.price) * 1000 : 10000 
                     });
                 }
             } 
-            // Menu Logic
+            // --- Menu Logic ---
             else if (safeRow.name) {
                 if (!menuGroups[cat]) menuGroups[cat] = [];
                 menuGroups[cat].push({
@@ -156,11 +160,8 @@
         // Build Deck (Interleaved)
         let newDeck = [];
         let adIndex = 0; 
-
-        // Get all categories
         const categories = Object.keys(menuGroups);
         
-        // Loop through each category
         categories.forEach((categoryName, index) => {
             const items = menuGroups[categoryName];
             
@@ -178,11 +179,12 @@
             }
 
             // 2. Add Ad After Category
-            // (We add an ad after every category, provided we have ads)
             if (adList.length > 0) {
                 const adToShow = adList[adIndex % adList.length]; 
+                
                 newDeck.push({
                     type: 'ad',
+                    mediaType: adToShow.type, // 'video' or 'image'
                     title: 'ADVERTISEMENT',
                     image: adToShow.image,
                     duration: adToShow.duration
@@ -191,10 +193,14 @@
             }
         });
 
-        // Edge case: Only ads, no menu
         if (categories.length === 0 && adList.length > 0) {
              adList.forEach(ad => {
-                 newDeck.push({ type: 'ad', image: ad.image, duration: ad.duration });
+                 newDeck.push({ 
+                    type: 'ad', 
+                    mediaType: ad.type,
+                    image: ad.image, 
+                    duration: ad.duration 
+                });
             });
         }
 
@@ -227,7 +233,7 @@
         if (slideDeck.length === 0) return;
 
         slideDeck.forEach(page => {
-            if(page.type === 'ad') return; // Hide ads on mobile list
+            if(page.type === 'ad') return; 
 
             page.items.forEach(item => {
                 const fallbackImage = 'https://placehold.co/600x400/333/FFF?text=No+Image';
@@ -269,30 +275,74 @@
         const header = document.getElementById('main-header');
         const footer = document.getElementById('main-footer');
 
+        // Reset timer just in case
+        if(slideTimer) clearTimeout(slideTimer);
+        
         container.innerHTML = ''; 
 
+        // === ADVERTISEMENT HANDLING ===
         if (slide.type === 'ad') {
-            // === FULL SCREEN AD MODE ===
             
-            // 1. Move UI out of the way
+            // Hide UI
             header.style.transform = "translateY(-100%)"; 
             footer.style.transform = "translateY(100%)";
-            
-            // 2. Break layout with FIXED positioning (z-50 covers everything)
             container.className = "fixed inset-0 w-screen h-screen bg-black flex items-center justify-center z-50 fade-in";
             
-            container.innerHTML = `
-                <img src="${slide.image}" class="w-full h-full object-contain" alt="Advertisement">
-            `;
+            // Check: VIDEO or IMAGE?
+            if (slide.mediaType === 'video') {
+                // RENDER VIDEO
+                // Muted is required for autoplay in most browsers.
+                container.innerHTML = `
+                    <video id="ad-video-player" src="${slide.image}" class="w-full h-full object-contain" autoplay muted playsinline></video>
+                `;
+                
+                // Smart Video Timer: Wait for 'ended' event
+                const videoElement = document.getElementById('ad-video-player');
+                
+                // Fallback: If video fails to load or play, skip after 5 seconds
+                const safetyTimer = setTimeout(nextSlide, 10000); 
+                
+                videoElement.onended = function() {
+                    clearTimeout(safetyTimer); // Clear safety timer
+                    nextSlide(); // Go to next immediately
+                };
+
+                videoElement.onerror = function() {
+                    clearTimeout(safetyTimer);
+                    console.log("Video failed to play, skipping.");
+                    nextSlide();
+                };
+
+                // Trigger play manually to be safe
+                videoElement.play().then(() => {
+                    // Video started, we rely on 'onended' now
+                    clearTimeout(safetyTimer);
+                    // Add a longer safety timeout equal to duration + buffer if we knew it, 
+                    // but we'll stick to 'onended' primarily. 
+                    // Let's add a very long safety just in case (e.g. 60s)
+                    slideTimer = setTimeout(nextSlide, 60000); 
+                }).catch(e => {
+                    console.error("Autoplay failed:", e);
+                    // If autoplay fails (browser block), we wait the standard duration
+                    slideTimer = setTimeout(nextSlide, 5000); 
+                });
+
+                return; // Exit function, don't set standard timer
+            } 
+            else {
+                // RENDER IMAGE
+                container.innerHTML = `
+                    <img src="${slide.image}" class="w-full h-full object-contain" alt="Advertisement">
+                `;
+            }
         } 
+        
+        // === MENU HANDLING ===
         else {
-            // === NORMAL MENU MODE ===
-            
-            // 1. Bring UI back
+            // Show UI
             header.style.transform = "translateY(0)"; 
             footer.style.transform = "translateY(0)";
             
-            // 2. Restore Grid Layout
             titleElement.innerText = slide.title;
             container.className = "grid grid-cols-2 grid-rows-2 gap-6 h-full w-full pt-4 relative z-0";
 
@@ -314,7 +364,7 @@
             });
         }
 
-        if(slideTimer) clearTimeout(slideTimer);
+        // Standard Timer for Images/Menu
         let nextDuration = slide.duration || 8000;
         slideTimer = setTimeout(nextSlide, nextDuration);
     }

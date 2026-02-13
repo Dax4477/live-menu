@@ -7,7 +7,7 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" /> 
     
-    <title>Obsera Menu v4.0 (Ads Enabled)</title>
+    <title>Obsera Menu v5.0 (Smart Ad Injection)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
@@ -60,7 +60,7 @@
 
     <main class="flex-grow px-4 lg:px-8 py-4 w-full h-[76vh] overflow-hidden relative">
         <div id="menu-container" class="w-full h-full uppercase relative">
-            <p class="text-white text-xl text-center w-full mt-20 uppercase">Loading Menu v4.0...</p>
+            <p class="text-white text-xl text-center w-full mt-20 uppercase">Loading Menu v5.0...</p>
         </div>
     </main>
 
@@ -109,90 +109,107 @@
     }
 
     function processData(rows) {
-        let groupedData = {};
+        let menuGroups = {};
+        let adList = [];
         let tickerMessage = "★ FOR ADVERTISING THIS SCREEN ★ CONTACT OBSERA SOLUTIONS ★ obserasolutions.site ★ WHATSAPP- +91 9562551376";
 
+        // 1. SEPARATE DATA (Ads vs Menu)
         rows.forEach(row => {
             let safeRow = {};
             Object.keys(row).forEach(k => safeRow[k.toLowerCase().trim()] = row[k]);
 
-            // 1. TICKER LOGIC
+            // Ticker Check
             if (safeRow.name && safeRow.name.toUpperCase() === "TICKER") {
                 let msg = safeRow.desc || safeRow.description || "";
                 if (msg.length > 0) tickerMessage = msg;
                 return; 
             }
 
-            // 2. MENU & AD LOGIC
             let cat = safeRow.category ? safeRow.category.trim().toUpperCase() : "OUR MENU";
             
-            // If it's an ad or has a name, process it
-            if(cat === "ADVERTISEMENT" || safeRow.name) { 
-                if(cat === "") cat = "OUR MENU";
-                if (!groupedData[cat]) groupedData[cat] = [];
-                groupedData[cat].push({
+            // Is this an Ad?
+            if (cat === "ADVERTISEMENT") {
+                // If it has an image, add to adList
+                if (safeRow.image) {
+                    adList.push({
+                        image: safeRow.image,
+                        duration: safeRow.price ? parseInt(safeRow.price) * 1000 : 10000 // Price column = Duration
+                    });
+                }
+            } 
+            // Is this a Menu Item?
+            else if (safeRow.name) {
+                if (!menuGroups[cat]) menuGroups[cat] = [];
+                menuGroups[cat].push({
                     name: safeRow.name,
-                    price: safeRow.price, // Used as Duration for Ads
+                    price: safeRow.price,
                     desc: safeRow.desc || safeRow.description || "",
                     image: safeRow.image
                 });
             }
         });
 
-        // 3. UPDATE TICKER
+        // 2. UPDATE TICKER
         const tickerElement = document.getElementById('ticker-text');
         if (tickerElement) {
              tickerElement.innerText = tickerMessage;
              setTimeout(adjustTickerSpeed, 300); 
         }
 
-        // 4. BUILD DECK (Now supports Ads)
+        // 3. BUILD THE DECK (Interleave Ads)
         let newDeck = [];
-        Object.keys(groupedData).forEach(categoryName => {
-            const items = groupedData[categoryName];
+        let adIndex = 0; // To rotate through ads
 
-            // IF ADVERTISEMENT
-            if (categoryName === "ADVERTISEMENT") {
-                items.forEach(adItem => {
-                    // Check if duration is specified in Price column, else default to 10s
-                    let duration = adItem.price ? parseInt(adItem.price) * 1000 : 10000;
-                    if(isNaN(duration)) duration = 10000;
-
-                    newDeck.push({
-                        type: 'ad',
-                        title: 'ADVERTISEMENT',
-                        image: adItem.image,
-                        duration: duration
-                    });
+        Object.keys(menuGroups).forEach(categoryName => {
+            const items = menuGroups[categoryName];
+            
+            // A. Add All Pages for this Category
+            const totalPages = Math.ceil(items.length / ITEMS_PER_SLIDE);
+            for(let i=0; i < totalPages; i++) {
+                const start = i * ITEMS_PER_SLIDE;
+                const end = start + ITEMS_PER_SLIDE;
+                newDeck.push({
+                    type: 'menu',
+                    title: categoryName, 
+                    items: items.slice(start, end),
+                    duration: DEFAULT_MENU_DURATION
                 });
-            } 
-            // IF NORMAL MENU
-            else {
-                const totalPages = Math.ceil(items.length / ITEMS_PER_SLIDE);
-                for(let i=0; i < totalPages; i++) {
-                    const start = i * ITEMS_PER_SLIDE;
-                    const end = start + ITEMS_PER_SLIDE;
-                    newDeck.push({
-                        type: 'menu',
-                        title: categoryName, 
-                        items: items.slice(start, end),
-                        duration: DEFAULT_MENU_DURATION
-                    });
-                }
+            }
+
+            // B. Inject an Ad after this Category (if ads exist)
+            if (adList.length > 0) {
+                const adToShow = adList[adIndex % adList.length]; // Cycle through ads
+                newDeck.push({
+                    type: 'ad',
+                    title: 'ADVERTISEMENT',
+                    image: adToShow.image,
+                    duration: adToShow.duration
+                });
+                adIndex++; // Next time use the next ad
             }
         });
 
-        // 5. UPDATE DECK IF CHANGED
+        // If we have ONLY ads and no menu (edge case)
+        if (newDeck.length === 0 && adList.length > 0) {
+            adList.forEach(ad => {
+                 newDeck.push({
+                    type: 'ad',
+                    title: 'ADVERTISEMENT',
+                    image: ad.image,
+                    duration: ad.duration
+                });
+            });
+        }
+
+        // 4. UPDATE DECK IF CHANGED
         if (slideDeck.length === 0) {
             slideDeck = newDeck;
             startCorrectView();
         } else {
-            // Simple comparison to check for updates
             if (JSON.stringify(slideDeck) !== JSON.stringify(newDeck)) {
                 console.log("Data updated detected.");
                 slideDeck = newDeck;
-                if(isMobile()) renderMobileView(); // Immediate update for mobile
-                // For TV, it will update on next slide cycle automatically
+                if(isMobile()) renderMobileView(); 
             }
         }
     }
@@ -201,7 +218,6 @@
         if(isMobile()) {
             renderMobileView();
         } else {
-            // Only start if not already running
             if(!slideTimer) {
                 initSlideshow();
             }
@@ -210,7 +226,7 @@
 
     // --- MOBILE VIEW (Simple List) ---
     function renderMobileView() {
-        if(slideTimer) clearTimeout(slideTimer); // Stop slideshow on mobile
+        if(slideTimer) clearTimeout(slideTimer);
         const container = document.getElementById('menu-container');
         const titleElement = document.getElementById('menu-title');
         
@@ -221,7 +237,8 @@
         if (slideDeck.length === 0) return;
 
         slideDeck.forEach(page => {
-            if(page.type === 'ad') return; // Skip full screen ads on mobile list for now
+            // Skip ads in mobile list
+            if(page.type === 'ad') return; 
 
             page.items.forEach(item => {
                 const fallbackImage = 'https://placehold.co/600x400/333/FFF?text=No+Image';
@@ -270,8 +287,7 @@
 
         // 1. RENDER ADVERTISEMENT
         if (slide.type === 'ad') {
-            // Hide Header for full immersion
-            header.style.transform = "translateY(-100%)"; 
+            header.style.transform = "translateY(-100%)"; // Hide header
             
             container.className = "w-full h-full flex items-center justify-center bg-black fade-in";
             container.innerHTML = `
@@ -281,8 +297,7 @@
         
         // 2. RENDER MENU PAGE
         else {
-            // Show Header
-            header.style.transform = "translateY(0)";
+            header.style.transform = "translateY(0)"; // Show Header
             titleElement.innerText = slide.title;
             container.className = "grid grid-cols-2 grid-rows-2 gap-6 h-full w-full pt-4";
 
@@ -304,9 +319,14 @@
             });
         }
 
-        // SCHEDULE NEXT SLIDE (Recursive Timeout for variable duration)
+        // SCHEDULE NEXT SLIDE
         if(slideTimer) clearTimeout(slideTimer);
-        slideTimer = setTimeout(nextSlide, slide.duration);
+        
+        // Ensure duration is valid number
+        let nextDuration = slide.duration;
+        if (!nextDuration || isNaN(nextDuration)) nextDuration = 8000;
+        
+        slideTimer = setTimeout(nextSlide, nextDuration);
     }
 
     function updateClock() {

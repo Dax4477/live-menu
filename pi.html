@@ -7,7 +7,7 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" /> 
     
-    <title>Obsera Menu v3.3</title>
+    <title>Obsera Menu v3.4 (Infinite Ticker)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
@@ -25,21 +25,19 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Smooth Scrolling Text */
-        /* Update this in your <style> section */
-.smooth-scroll {
-    display: inline-block; /* Ensures width is calculated correctly */
-    white-space: nowrap;
-    will-change: transform;
-    animation-name: scroll-left; 
-    animation-timing-function: linear;
-    animation-iteration-count: infinite;
-    /* Remove padding-left if you want it to start immediately at the edge */
-}
+        .smooth-scroll {
+            display: inline-block; 
+            white-space: nowrap; /* CRITICAL: Never wrap text */
+            will-change: transform;
+            animation-name: scroll-left; 
+            animation-timing-function: linear;
+            animation-iteration-count: infinite;
+        }
 
-@keyframes scroll-left {
-    from { transform: translateX(100vw); } /* Start from right edge of screen */
-    to { transform: translateX(-100%); }   /* Go until the LEFT edge of the text clears the screen */
-}
+        @keyframes scroll-left {
+            from { transform: translateX(100vw); } 
+            to { transform: translateX(-100%); } 
+        }
     </style>
 </head>
 
@@ -56,7 +54,7 @@
         </div>
 
         <div class="text-right">
-            <div id="clock" class="text-xl lg:text-2xl font-mono font-bold text-white bg-red-900/30 px-3 py-1 rounded inline-block whitespace-nowrap">00:00 PM</div>
+            <div id="clock" class="text-xl lg:text-6xl font-mono font-bold text-white bg-red-900/30 px-3 py-1 rounded inline-block whitespace-nowrap">00:00 PM</div>
         </div>
     </header>
 
@@ -66,11 +64,12 @@
         </div>
     </main>
 
-    <footer class="fixed bottom-0 left-0 w-full bg-black z-[9999] border-t-2 border-blue-800 h-[12vh] flex items-center relative">
-       <div id="ticker-text" class="smooth-scroll text-7xl text-yellow-400 font-bold leading-none w-max min-w-full shrink-0">
+    <footer class="fixed bottom-0 left-0 w-full bg-black z-[9999] border-t-2 border-blue-800 h-[12vh] flex items-center relative overflow-hidden">
+        <div id="ticker-text" class="smooth-scroll text-7xl text-yellow-400 font-bold leading-none w-max min-w-full shrink-0">
             ★ CONTACT OBSERA SOLUTIONS ★ WHATSAPP- +91 9562551376
         </div>
-        <div class="absolute right-0 bottom-0 bg-gray-900/80 px-1 py-1 rounded border border-gray-700">
+        
+        <div class="absolute right-0 bottom-0 bg-gray-900/80 px-1 py-1 rounded border border-gray-700 z-50">
             <img src="https://github.com/Dax4477/live-menu/blob/main/Gemini_Generated_Image_jejmw3jejmw3jejm%20(3).png?raw=true" 
                  class="h-9 w-auto object-contain opacity-90" 
                  alt="Obsera Logo">
@@ -112,23 +111,22 @@
     function processData(rows) {
         let groupedData = {};
         
-        // Default Ticker Message
         let tickerMessage = "★ FOR ADVERTISING THIS SCREEN ★ CONTACT OBSERA SOLUTIONS ★ obserasolutions.site ★ WHATSAPP- +91 9562551376";
 
         rows.forEach(row => {
             let safeRow = {};
             Object.keys(row).forEach(k => safeRow[k.toLowerCase().trim()] = row[k]);
 
-            // 1. CHECK FOR TICKER
+            // 1. TICKER LOGIC
             if (safeRow.name && safeRow.name.toUpperCase() === "TICKER") {
                 let msg = safeRow.desc || safeRow.description || "";
                 if (msg.length > 0) {
                     tickerMessage = msg;
                 }
-                return; // Don't add ticker row to the menu cards
+                return; 
             }
 
-            // 2. NORMAL MENU ITEMS
+            // 2. MENU LOGIC
             let cat = safeRow.category ? safeRow.category.trim().toUpperCase() : "OUR MENU";
             if(safeRow.name) { 
                 if(cat === "") cat = "OUR MENU";
@@ -142,15 +140,15 @@
             }
         });
 
-        // 3. UPDATE FOOTER & SPEED
+        // 3. UPDATE TICKER
         const tickerElement = document.getElementById('ticker-text');
         if (tickerElement) {
              tickerElement.innerText = tickerMessage;
-             // Calculate speed after text update
-             setTimeout(adjustTickerSpeed, 100); 
+             // Increased timeout to 300ms to allow rendering of very long text
+             setTimeout(adjustTickerSpeed, 300); 
         }
 
-        // 4. BUILD SLIDES
+        // 4. BUILD DECK
         let newDeck = [];
         Object.keys(groupedData).forEach(categoryName => {
             const items = groupedData[categoryName];
@@ -218,7 +216,7 @@
                                 <h3 class="text-lg font-bold text-yellow-500 font-heading leading-tight line-clamp-2">${item.name}</h3>
                                 <span class="bg-gray-900 border border-gray-600 text-white px-2 py-0.5 rounded text-sm font-bold whitespace-nowrap ml-2">${item.price}</span>
                             </div>
-                            <p class="text-gray-300 text-xs leading-snug line-clamp-2">${item.desc}</p>
+                            <p class="text-gray-300 text-xl leading-snug line-clamp-2">${item.desc}</p>
                         </div>
                     </div>`;
             });
@@ -227,7 +225,6 @@
 
     function initSlideshow() {
         const container = document.getElementById('menu-container');
-        // Force 2 cols x 2 rows
         container.className = "grid grid-cols-2 grid-rows-2 gap-6 h-full w-full";
 
         currentSlideIndex = 0;
@@ -240,11 +237,7 @@
     function nextSlide() {
         currentSlideIndex++;
         if (currentSlideIndex >= slideDeck.length) {
-            // Smooth Loop instead of Reload
             currentSlideIndex = 0; 
-            
-            // Optional: If you really want to reload to force updates, uncomment this:
-            // if (navigator.onLine) window.location.reload(); 
         }
         showSlide(currentSlideIndex);
     }
@@ -281,7 +274,6 @@
         document.getElementById('clock').innerText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' ,second: "2-digit"});
     }
     
-    // Auto Speed Calculation Function
     function adjustTickerSpeed() {
         const ticker = document.getElementById('ticker-text');
         if (!ticker) return;
@@ -289,7 +281,7 @@
         const textWidth = ticker.offsetWidth;
         const screenWidth = window.innerWidth;
         
-        // Speed: 150 pixels per second (Adjust this number to make it faster/slower)
+        // Speed Control (150 = Normal, 200 = Faster)
         const speedPixelsPerSec = 150; 
 
         const totalDistance = screenWidth + textWidth;

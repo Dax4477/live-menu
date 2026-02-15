@@ -15,7 +15,7 @@ const OBSERA_CLIENTS = {
         hours: 24,
         mapLink: "https://maps.google.com/?q=Kozhikode+Medical+College",
         menuSheetId: "1s9NCrlKf3i4lt4VL3WKp8A9o9DXYrsE3ccddPVkMyk8",
-        adSheetId: "PUT_MEDICAL_AD_SHEET_ID_HERE"
+        adSheetId: "1OhzIcctYTyeKQEA-9K5tFZnQqeEu38r-dHQfvXdby3s"
     }
 };
 

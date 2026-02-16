@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Obsera Admin | Client Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #0f172a; color: white; font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="p-4 md:p-10 min-h-screen flex flex-col items-center justify-center">
+
+    <div class="w-full max-w-4xl grid md:grid-cols-2 gap-8">
+        
+        <div class="bg-slate-800/50 border border-slate-700 p-6 rounded-2xl shadow-xl">
+            <h1 class="text-2xl font-bold text-sky-400 mb-2">Register New Client</h1>
+            <p class="text-slate-400 text-sm mb-6">Fill this out when you sign a new restaurant to generate their system code.</p>
+
+            <form id="clientForm" class="space-y-4">
+                <div>
+                    <label class="text-xs font-bold text-slate-400 uppercase tracking-wide">Client ID (No spaces)</label>
+                    <input type="text" id="clientId" required placeholder="e.g., ccd_calicut" class="w-full mt-1 bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 text-white focus:border-sky-400 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="text-xs font-bold text-slate-400 uppercase tracking-wide">Business Name</label>
+                    <input type="text" id="clientName" required placeholder="e.g., Cafe Coffee Day" class="w-full mt-1 bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 text-white focus:border-sky-400 focus:outline-none">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs font-bold text-slate-400 uppercase tracking-wide">Active Hours</label>
+                        <input type="number" id="clientHours" required placeholder="e.g., 24" class="w-full mt-1 bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 text-white focus:border-sky-400 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-slate-400 uppercase tracking-wide">Map Link (Optional)</label>
+                        <input type="url" id="clientMap" placeholder="https://maps.google.com/..." class="w-full mt-1 bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 text-white focus:border-sky-400 focus:outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-xs font-bold text-emerald-400 uppercase tracking-wide">Menu Google Sheet ID</label>
+                    <input type="text" id="menuSheetId" required placeholder="Paste the long ID here..." class="w-full mt-1 bg-slate-900 border border-emerald-600/50 rounded-lg px-4 py-2 text-white focus:border-emerald-400 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="text-xs font-bold text-purple-400 uppercase tracking-wide">Advertisement Google Sheet ID</label>
+                    <input type="text" id="adSheetId" required placeholder="Paste the long ID here..." class="w-full mt-1 bg-slate-900 border border-purple-600/50 rounded-lg px-4 py-2 text-white focus:border-purple-400 focus:outline-none">
+                </div>
+
+                <button type="button" onclick="generateCode()" class="w-full mt-4 bg-sky-500 hover:bg-sky-400 text-slate-900 font-bold py-3 rounded-lg transition-colors uppercase tracking-widest text-sm">
+                    Generate Code
+                </button>
+            </form>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-700 p-6 rounded-2xl shadow-xl flex flex-col">
+            <div class="flex justify-between items-end mb-4">
+                <div>
+                    <h2 class="text-xl font-bold text-white">Generated Code</h2>
+                    <p class="text-slate-400 text-xs mt-1">Paste this into your clients.js file</p>
+                </div>
+                <button onclick="copyCode()" id="copyBtn" class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold px-3 py-1.5 rounded transition-colors flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    Copy
+                </button>
+            </div>
+
+            <textarea id="outputCode" readonly class="w-full flex-grow bg-black border border-slate-700 rounded-lg p-4 text-emerald-400 font-mono text-sm focus:outline-none resize-none" placeholder="Your code will appear here..."></textarea>
+        </div>
+
+    </div>
+
+<script>
+    function generateCode() {
+        // Grab values from the form
+        const id = document.getElementById('clientId').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+        const name = document.getElementById('clientName').value.trim();
+        const hours = document.getElementById('clientHours').value.trim();
+        const map = document.getElementById('clientMap').value.trim();
+        const menuId = document.getElementById('menuSheetId').value.trim();
+        const adId = document.getElementById('adSheetId').value.trim();
+
+        if (!id || !name || !menuId || !adId) {
+            alert("Please fill in all required fields!");
+            return;
+        }
+
+        // Format the output string exactly how it needs to look in clients.js
+        const newClientCode = `    "${id}": {
+        name: "${name}",
+        tag: "${hours}h Active",
+        hours: ${hours},
+        mapLink: "${map}",
+        menuSheetId: "${menuId}",
+        adSheetId: "${adId}"
+    },`;
+
+        // Display it in the box
+        document.getElementById('outputCode').value = newClientCode;
+    }
+
+    function copyCode() {
+        const codeBox = document.getElementById('outputCode');
+        if (!codeBox.value) return;
+
+        // Copy to clipboard
+        codeBox.select();
+        document.execCommand('copy');
+
+        // Visual feedback
+        const btn = document.getElementById('copyBtn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = `<span class="text-emerald-400">Copied!</span>`;
+        setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+    }
+</script>
+</body>
+</html>

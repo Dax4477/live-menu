@@ -144,6 +144,7 @@ function processData(combinedData) {
         });
 
         // Process Ads (NEW: Added Link capture)
+// Process Ads (NEW: Auto-fixes missing https:// in links)
         combinedData.adRows.forEach(row => {
             let safeRow = {};
             Object.keys(row).forEach(k => safeRow[k.toLowerCase().trim()] = row[k]);
@@ -152,10 +153,19 @@ function processData(combinedData) {
             if (cat === "ADVERTISEMENT" || cat === "AD") {
                 if (safeRow.image) {
                     const isVideo = safeRow.image.match(/\.(mp4|webm|ogg)$/i);
+                    
+                    // --- SMART LINK FIXER ---
+                    let rawLink = safeRow.link || "";
+                    let finalLink = rawLink.trim();
+                    // If they typed a link, but forgot http:// or https://, add it automatically!
+                    if (finalLink !== "" && !finalLink.startsWith('http://') && !finalLink.startsWith('https://')) {
+                        finalLink = 'https://' + finalLink;
+                    }
+
                     adList.push({
                         type: isVideo ? 'video' : 'image',
                         image: safeRow.image,
-                        link: safeRow.link || "" // Grabs the link from your new column!
+                        link: finalLink // Uses the fixed link
                     });
                 }
             }

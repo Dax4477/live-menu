@@ -33,6 +33,30 @@ const OBSERA_CLIENTS = {
         menuSheetId: "1Q5yinqDrV4zsHMLQBm7ieHPlVLMAUK9vdAFOaMLQ73c",
         adSheetId: "1OhzIcctYTyeKQEA-9K5tFZnQqeEu38r-dHQfvXdby3s"
     },
+     "test3": {
+        name: "coffeday",
+        tag: "10h Active",
+        hours: 10,
+        mapLink: "",
+        menuSheetId: "1Q5yinqDrV4zsHMLQBm7ieHPlVLMAUK9vdAFOaMLQ73c",
+        adSheetId: "1OhzIcctYTyeKQEA-9K5tFZnQqeEu38r-dHQfvXdby3s"
+    },
+     "test4": {
+        name: "coffeday",
+        tag: "10h Active",
+        hours: 10,
+        mapLink: "",
+        menuSheetId: "1Q5yinqDrV4zsHMLQBm7ieHPlVLMAUK9vdAFOaMLQ73c",
+        adSheetId: "1OhzIcctYTyeKQEA-9K5tFZnQqeEu38r-dHQfvXdby3s"
+    },
+     "test5": {
+        name: "coffeday",
+        tag: "10h Active",
+        hours: 10,
+        mapLink: "",
+        menuSheetId: "1Q5yinqDrV4zsHMLQBm7ieHPlVLMAUK9vdAFOaMLQ73c",
+        adSheetId: "1OhzIcctYTyeKQEA-9K5tFZnQqeEu38r-dHQfvXdby3s"
+    },
 };
  
 

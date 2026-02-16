@@ -13,6 +13,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     
+    <script src="clients.js"></script>
+
     <script>
         tailwind.config = {
             theme: {
@@ -304,31 +306,8 @@
                     </div>
 
                     <div id="locations-grid-container" class="hidden fade-in">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div class="group relative overflow-hidden rounded-xl bg-brand-panel border border-brand-accent/30 h-64 shadow-lg hover:shadow-brand-accent/20 transition-all duration-500">
-                                <img src="https://lh3.googleusercontent.com/gps-cs-s/AHVAweom4DR2xIbwNhSJlMTchEKnk4qzJzTMHgqRFQdbZQtEkxx6Sypc2XrSUvUasBPuFJLDNUFyfR3gc9Pz70iERJ4TPO3E4kCdm4ZBA58dbuN4a7g7aroRDaKu4v9O8rnBcaXDX43q=w408-h306-k-no" class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-700">
-                                <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div>
-                                <div class="absolute bottom-0 left-0 p-6 w-full transform group-hover:translate-y-[-5px] transition-transform duration-300">
-                                    <h3 class="text-xl font-bold text-white mb-1">Bilal Thatukada</h3>
-                                    <p class="text-brand-accent text-sm mb-3">Uruvachal</p>
-                                    <div class="flex justify-between items-end">
-                                        <span class="px-2 py-0.5 rounded bg-white/10 text-[10px] border border-white/10 backdrop-blur-md">High Traffic</span>
-                                        <a href="https://maps.app.goo.gl/7v3uR8b4a299DDcdA?g_st=awb" target="_blank" class="text-xs text-white hover:text-brand-accent flex items-center gap-1 z-20 relative bg-brand-panel/50 px-2 py-1 rounded-md border border-white/20 hover:bg-brand-panel hover:border-brand-accent transition-all">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                                            View Map
-                                        </a>
-                                    </div>
-                                </div>
+                        <div id="dynamic-locations-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
                             </div>
-                            <div class="rounded-xl bg-brand-panel/30 border border-white/5 h-64 flex flex-col items-center justify-center text-center p-6 border-dashed opacity-50 group hover:opacity-75 transition-opacity">
-                                <span class="text-slate-500 font-display font-bold text-2xl mb-2 group-hover:text-slate-300">Location #2</span>
-                                <span class="text-xs px-2 py-1 rounded bg-white/5 text-slate-400">Coming Soon</span>
-                            </div>
-                            <div class="rounded-xl bg-brand-panel/30 border border-white/5 h-64 flex flex-col items-center justify-center text-center p-6 border-dashed opacity-50 group hover:opacity-75 transition-opacity">
-                                <span class="text-slate-500 font-display font-bold text-2xl mb-2 group-hover:text-slate-300">Location #3</span>
-                                <span class="text-xs px-2 py-1 rounded bg-white/5 text-slate-400">Coming Soon</span>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </section>
@@ -547,7 +526,7 @@
         <div id="blog-post-view" class="page-section fade-in hidden">
             <div class="container mx-auto px-6 py-20 max-w-4xl">
                 <button onclick="navigateTo('blog')" class="mb-8 flex items-center gap-2 text-sm text-slate-400 hover:text-brand-accent transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
                     Back to Articles
                 </button>
                 <div class="glass-panel p-8 md:p-12 rounded-2xl border border-white/10 relative overflow-hidden">
@@ -707,12 +686,11 @@
                 target.classList.remove('hidden'); 
                 
                 // --- CRUCIAL FIX FOR IFRAME CUTOFF ---
-                // Tell the iframe to recalculate its height right after it becomes visible
                 const iframe = target.querySelector('iframe');
                 if (iframe && iframe.iFrameResizer) {
                     setTimeout(() => { 
                         iframe.iFrameResizer.resize(); 
-                    }, 50); // 50ms delay ensures the browser has drawn the page first
+                    }, 50);
                 }
             }
 
@@ -724,7 +702,6 @@
                     else if (pageId === 'platforms') el.classList.add('text-purple-400');
                     else el.classList.add('text-brand-accent');
                 } else {
-                    // Restore original colors for special links when not active
                     if (el.dataset.target === 'portal') el.classList.add('text-emerald-400');
                     if (el.dataset.target === 'platforms') el.classList.add('text-purple-400');
                 }
@@ -754,17 +731,73 @@
             }
         });
 
+// ================= DYNAMIC LOCATIONS GRID GENERATOR =================
+function renderLocationsGrid() {
+    const gridContainer = document.getElementById('dynamic-locations-grid');
+    if (!gridContainer || typeof LOCATIONS_DATA === 'undefined') return;
+
+    let html = '';
+    
+    // Default placeholder image for locations
+    const defaultBg = 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&q=80&w=800';
+
+    // Build the Active Client Cards
+    LOCATIONS_DATA.forEach(loc => {
+        // Only generate the map button if a map link exists in clients.js
+        const mapHtml = loc.mapLink ? `
+            <a href="${loc.mapLink}" target="_blank" class="text-xs text-white hover:text-brand-accent flex items-center gap-1 z-20 relative bg-brand-panel/50 px-2 py-1 rounded-md border border-white/20 hover:bg-brand-panel hover:border-brand-accent transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                View Map
+            </a>
+        ` : '';
+
+        html += `
+            <div class="group relative overflow-hidden rounded-xl bg-brand-panel border border-brand-accent/30 h-64 shadow-lg hover:shadow-brand-accent/20 transition-all duration-500">
+                <img src="${defaultBg}" class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-700" alt="${loc.name}">
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div>
+                <div class="absolute bottom-0 left-0 p-6 w-full transform group-hover:translate-y-[-5px] transition-transform duration-300">
+                    <h3 class="text-xl font-bold text-white mb-1">${loc.name}</h3>
+                    <p class="text-brand-accent text-sm mb-3">${loc.tag}</p>
+                    <div class="flex justify-between items-end">
+                        <span class="px-2 py-0.5 rounded bg-white/10 text-[10px] border border-white/10 backdrop-blur-md text-emerald-400">Live Network</span>
+                        ${mapHtml}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    // Fill remaining grid spaces with "Coming Soon" placeholders if less than 3 locations
+    const minimumCards = 3;
+    const paddingNeeded = minimumCards - LOCATIONS_DATA.length;
+    
+    if (paddingNeeded > 0) {
+        for (let i = 0; i < paddingNeeded; i++) {
+            html += `
+                <div class="rounded-xl bg-brand-panel/30 border border-white/5 h-64 flex flex-col items-center justify-center text-center p-6 border-dashed opacity-50 group hover:opacity-75 transition-opacity">
+                    <span class="text-slate-500 font-display font-bold text-2xl mb-2 group-hover:text-slate-300">New Location</span>
+                    <span class="text-xs px-2 py-1 rounded bg-white/5 text-slate-400">Coming Soon</span>
+                </div>
+            `;
+        }
+    }
+
+    gridContainer.innerHTML = html;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     navigateTo('home', false);
     history.replaceState({ pageId: 'home', type: 'page' }, null, window.location.pathname);
     
-    // Initialize iFrames with smarter height calculation
+    // Call the grid generator!
+    renderLocationsGrid();
+    
     const calcFrame = document.getElementById('calc-frame');
     if(calcFrame) {
         iFrameResize({ log: false, checkOrigin: false, heightCalculationMethod: 'lowestElement' }, '#calc-frame');
     }
     
-const portalFrame = document.getElementById('portal-frame');
+    const portalFrame = document.getElementById('portal-frame');
     if(portalFrame) {
         iFrameResize({ 
             log: false, 

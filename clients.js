@@ -17,12 +17,12 @@ const OBSERA_CLIENTS = {
         menuSheetId: "1s9NCrlKf3i4lt4VL3WKp8A9o9DXYrsE3ccddPVkMyk8",
         adSheetId: "1OhzIcctYTyeKQEA-9K5tFZnQqeEu38r-dHQfvXdby3s"
     },
-       "test": {
+          "test": {
         name: "coffeday",
         tag: "10h Active",
         hours: 10,
         mapLink: "",
-        menuSheetId: "1s9NCrlKf3i4lt4VL3WKp8A9o9DXYrsE3ccddPVkMyk8",
+        menuSheetId: "1Q5yinqDrV4zsHMLQBm7ieHPlVLMAUK9vdAFOaMLQ73c",
         adSheetId: "1OhzIcctYTyeKQEA-9K5tFZnQqeEu38r-dHQfvXdby3s"
     },
 };

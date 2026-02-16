@@ -321,6 +321,15 @@
 window.onload = function() {
         let listHTML = '';
         LOCATIONS_DATA.forEach((loc) => {
+            
+            // Only generate the Map button HTML if a link actually exists
+            const mapButtonHTML = loc.mapLink ? `
+                <a href="${loc.mapLink}" target="_blank" class="text-[10px] text-slate-300 hover:text-sky-400 flex items-center gap-1 z-20 relative bg-brand-dark/50 px-2 py-1.5 rounded-md border border-white/10 hover:bg-[#0f172a] hover:border-sky-400 transition-all ml-2 shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    Map
+                </a>
+            ` : ''; // If there is no map link, insert nothing
+
             listHTML += `
                 <div class="flex items-center justify-between px-4 py-3 hover:bg-white/5 transition-colors border-b border-white/5 last:border-0 group">
                     <label class="flex items-center gap-4 cursor-pointer flex-grow">
@@ -336,10 +345,7 @@ window.onload = function() {
                         </div>
                     </label>
 
-                    <a href="${loc.mapLink || '#'}" target="_blank" class="text-[10px] text-slate-300 hover:text-sky-400 flex items-center gap-1 z-20 relative bg-brand-dark/50 px-2 py-1.5 rounded-md border border-white/10 hover:bg-[#0f172a] hover:border-sky-400 transition-all ml-2 shrink-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                        Map
-                    </a>
+                    ${mapButtonHTML}
                 </div>
             `;
         });

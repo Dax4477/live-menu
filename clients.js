@@ -21,7 +21,7 @@ const OBSERA_CLIENTS = {
         name: "coffeday",
         tag: "10h Active",
         hours: 10,
-        mapLink: "",
+        mapLink: "https://maps.app.goo.gl/Q18aTfQMsGNLViFq5",
         menuSheetId: "1Q5yinqDrV4zsHMLQBm7ieHPlVLMAUK9vdAFOaMLQ73c",
         adSheetId: "1OhzIcctYTyeKQEA-9K5tFZnQqeEu38r-dHQfvXdby3s"
     },

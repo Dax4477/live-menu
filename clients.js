@@ -16,8 +16,17 @@ const OBSERA_CLIENTS = {
         mapLink: "https://maps.google.com/?q=Kozhikode+Medical+College",
         menuSheetId: "1s9NCrlKf3i4lt4VL3WKp8A9o9DXYrsE3ccddPVkMyk8",
         adSheetId: "1OhzIcctYTyeKQEA-9K5tFZnQqeEu38r-dHQfvXdby3s"
-    }
+    },
+       "test": {
+        name: "coffeday",
+        tag: "10h Active",
+        hours: 10,
+        mapLink: "",
+        menuSheetId: "1s9NCrlKf3i4lt4VL3WKp8A9o9DXYrsE3ccddPVkMyk8",
+        adSheetId: "1OhzIcctYTyeKQEA-9K5tFZnQqeEu38r-dHQfvXdby3s"
+    },
 };
+ 
 
 const LOCATIONS_DATA = Object.keys(OBSERA_CLIENTS).map(key => {
     return { id: key, ...OBSERA_CLIENTS[key] };
